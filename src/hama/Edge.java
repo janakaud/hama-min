@@ -1,14 +1,3 @@
-package hama;
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-/**
- *
- * @author janaka
- */
 /**
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements. See the NOTICE file distributed with this
@@ -25,6 +14,8 @@ package hama;
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+package hama;
+
 /**
  * The edge class
  *
