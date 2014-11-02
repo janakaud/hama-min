@@ -41,7 +41,7 @@ public class ConnectedGraphs {
         edgeCount = 0;
         
         // check for valid input data
-        if (edges < vertices) {
+        if (edges < vertices - 1) {
             return null;
         }
         maxEdges = (vertices * (vertices + 1)) / 2;

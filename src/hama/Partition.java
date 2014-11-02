@@ -25,14 +25,14 @@ import java.util.concurrent.ConcurrentMap;
 @SuppressWarnings("rawtypes")
 public class Partition<W extends WritableComparable, E extends Writable, M extends Writable> {
 
-    private final long partitionId;
+    private final long partitionID;
     private final long capacity;
     // private List<Vertex<V, E, M>> vertices;
 //	private ConcurrentMap<V, Vertex<V, E, M>> vertices;
     private ConcurrentMap<W, Vertex<W, E, M>> vertices;
 
-    public Partition(long partitionId, long capacity) {
-        this.partitionId = partitionId;
+    public Partition(long partitionID, long capacity) {
+        this.partitionID = partitionID;
         this.capacity = capacity;
         // this.vertices = new ArrayList<Vertex<V, E, M>>();
 //		this.vertices = Maps.newConcurrentMap();
@@ -40,7 +40,7 @@ public class Partition<W extends WritableComparable, E extends Writable, M exten
     }
 
     public long getPartitionID() {
-        return partitionId;
+        return partitionID;
     }
 
     public long getCapacity() {
@@ -71,7 +71,7 @@ public class Partition<W extends WritableComparable, E extends Writable, M exten
         return vertices;
     }
 
-    public Set<W> getVertextIds() {
+    public Set<W> getVertexIDs() {
         return vertices.keySet();
     }
 

@@ -16,9 +16,10 @@ import java.util.Map;
 public class HamaDriver  {
 
     public static void main(String args[]) {
-        int vertexCount = 10;
-        int edgeCount = 25;
-        int partitionCount = 4;
+        int vertexCount = 1000;
+        int edgeCount = 250000;
+        int partitionCount = 40;
+        int partitionCapacity = 40;
         
         ArrayList<Edge<WritableComparableInteger, WritableInteger>>[] graph;
 
@@ -39,7 +40,7 @@ public class HamaDriver  {
         
 /*        // display graph
         for (int i = 0; i < vertexCount; i++) {
-            System.out.println("vertex Id: " + vertices[i].getVertexID().getValue() + " Edges : ");
+            System.out.println("Vertex ID: " + vertices[i].getVertexID().getValue() + " Edges : ");
             int limit = vertices[i].getEdges().size();
             System.out.println(limit + " is the size");
             for (int j = 0; j < limit; j++) {
@@ -74,5 +75,37 @@ public class HamaDriver  {
         
         System.out.format("%d\t%d\t%20s\t%d\n", vertexCount, partitionCount, 
                 "Hashing", edgeCuts);
+        
+        // try partitioning with default Hama hash partitioning algorithm
+        Partitioner<Vertex, Void> greedy = 
+                new GreedyHeuristicGraphPartitionerImpl<>(
+                        partitionCount, partitionCapacity);
+        map = new HashMap<>();
+        for(Vertex v: vertices) {
+            map.put(v.getVertexID(), 
+                    greedy.getPartition(v, null, partitionCount));
+        }
+        
+        // count number of edge cuts in resulting partitioning
+        edgeCuts = 0;
+        for(Vertex from: vertices) {
+            fromPartition = map.get(from.getVertexID());
+            for(Object e: from.getEdges()) {
+                edge = (Edge)e;
+                toPartition = map.get(edge.getDestinationVertexID());
+//                System.out.format("%3d %3d\n", fromPartition, toPartition);
+//                System.out.format("%3d %3d\n", 
+//                        ((WritableComparableInteger)
+//                                from.getVertexID()).getValue(), 
+//                        ((WritableComparableInteger)
+//                                edge.getDestinationVertexID()).getValue());
+                if(fromPartition != toPartition) {  // edge cut detected!
+                    edgeCuts++;
+                }
+            }
+        }
+        
+        System.out.format("%d\t%d\t%20s\t%d\n", vertexCount, partitionCount, 
+                "GreedyHeuristic", edgeCuts);
     }
 }

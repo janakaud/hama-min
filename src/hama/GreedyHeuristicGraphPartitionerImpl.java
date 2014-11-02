@@ -1,9 +1,7 @@
 package hama;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -12,22 +10,30 @@ import java.util.Set;
  * GreedyHeuristicGraphPartitioner is partitioning by the (Weighted)
  * Deterministic Greedy algorithm.
  *
- * @param <K>
- * @param <V>
+ * @param <W> Vertex ID object type
+ * @param <E> Edge cost object type
+ * @param <M> Vertex value object type
+ * @param <K> Generally W (Map key type for vertex to partition mapping)
+ * @param <V> Generally Integer (Map value type for vertex to partition mapping)
  * 
 */
-public class GreedyHeuristicGraphPartitionerImpl<W extends WritableComparable, E extends Writable, M extends Writable, K, V>
+public class GreedyHeuristicGraphPartitionerImpl<W extends WritableComparable, 
+        E extends Writable, M extends Writable, K, V>
         implements Partitioner<K, V> {
 
     private final int totalPartitions;
     // Map beetween partionID to VertextID
     // Edge Count of each partion
     private Map<K, V> vertexPartitionMap;
-    private List<Partition<W, E, M>> partitions;// may be priority queue??
+    private final Partition<W, E, M>[] partitions;  // may be priority queue??
 
-    public GreedyHeuristicGraphPartitionerImpl(int totalPartitions) {
+    public GreedyHeuristicGraphPartitionerImpl(int totalPartitions, 
+            int partitionCapacity) {
         this.totalPartitions = totalPartitions;
-        this.partitions = new ArrayList<Partition<W, E, M>>();
+        this.partitions = new Partition[totalPartitions];
+        for(int i = 0; i < totalPartitions; i++)
+            this.partitions[i] = new Partition(i, partitionCapacity);
+        this.vertexPartitionMap = new HashMap<>();
     }
 
     public Map<K, V> getVertexPartitionMap() {
@@ -47,54 +53,54 @@ public class GreedyHeuristicGraphPartitionerImpl<W extends WritableComparable, E
             Vertex<W, E, M> vert) {
         long partitionID = -1;
         long partitionVertexCount = 0;
-        double peakValue = 0;
+        double peakValue = Double.NEGATIVE_INFINITY;
 
-        Iterator<Partition<W, E, M>> it = partitions.iterator();
+//        int i = 0;
+        // Iterate through all the partitions and select the best possible
+        for(Partition<W, E, M> p: partitions) {
 
-        // Iterate through all the partitions and slect the best possible
-        while (it.hasNext()) {
-            Partition<W, E, M> p = it.next();
-
-            // Intersections between partition vertextIds and given Vertex
-            double function = CollectionUtils.intersection(p.getVertextIds(),
-                    getNeighborVetrices(vert)).size()
+            // Intersections between partition vertextIDs and given Vertex
+            double function = CollectionUtils.intersection(p.getVertexIDs(),
+                    getNeighborVertices(vert)).size()
                     * p.calculateWeightPenalty();
 
-            // Find minimum
-            if (function > peakValue) {
+            if (function > peakValue) {         // Find minimum
                 peakValue = function;
                 partitionID = p.getPartitionID();
                 partitionVertexCount = p.getVertices().size();
             }
-
-            // Balanced
-            if (function == peakValue) {
+            else if (function == peakValue) {   // Balanced
                 if (partitionVertexCount > p.getVertices().size()) {
                     partitionID = p.getPartitionID();
                     partitionVertexCount = p.getVertices().size();
                 }
             }
+//                
+//            if(i == totalPartitions - 1 && partitionID == -1) {                    
+//                System.out.printf("%f %d\n", function, partitionVertexCount);
+//            }
+//            i++;
         }
         return partitionID;
     }
 
-    private Set<W> getNeighborVetrices(Vertex<W, E, M> vert) {
-        Set<W> verticesId = new HashSet<W>();
+    private Set<W> getNeighborVertices(Vertex<W, E, M> vert) {
+        Set<W> verticesID = new HashSet<>();
         for (Edge<W, E> outEdge : vert.getEdges()) {
-            verticesId.add(outEdge.getDestinationVertexID());
+            verticesID.add(outEdge.getDestinationVertexID());
         }
-        return verticesId;
-
+        return verticesID;
     }
 
     @Override
     public int getPartition(K key, V value, int numTasks) {
         Partition result = (Partition) vertexPartitionMap.get(key);
         if (result == null) {
-            result = partitions.get(
-                    (int) deterministicGreedyPartitioning((Vertex) key));
+            result = partitions[
+                    (int) deterministicGreedyPartitioning((Vertex) key)];
             vertexPartitionMap.put(key, (V) result);
         }
+        result.putVertex((Vertex) key);
         return (int) result.getPartitionID();
     }
 }

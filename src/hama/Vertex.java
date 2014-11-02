@@ -20,7 +20,7 @@ import java.util.List;
  * {@link Vertex#getEdges()} call. The self value of the vertex could be changed
  * by {@link Vertex#setValue(Writable)}.
  * 
-* @param <V> Vertex ID object type
+ * @param <V> Vertex ID object type
  * @param <E> Edge cost object type
  * @param <M> Vertex value object type
  */
